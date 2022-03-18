@@ -11,7 +11,6 @@ struct Opts {
     base_url: String,
     username: String,
     password: String,
-    timeout: u32,
     csv_file_path: String,
     error_message: String,
     driver_args: Vec<String>,
@@ -21,11 +20,9 @@ struct Opts {
 async fn main() -> WebDriverResult<()> {
     // loads options file
     let opts: Opts = load_opts();
-    println!("{:?}\n", opts);
 
     // loads chrome options
     let caps: ChromeCapabilities = load_caps(opts.clone());
-    println!("{:?}\n", caps);
     
     // starts new webdriver
     let driver: WebDriver = WebDriver::new("http://localhost:4444", &caps).await?;
@@ -36,6 +33,7 @@ async fn main() -> WebDriverResult<()> {
     // checks if user is logged in
     let is_logged_in = !is_logged_in(&driver, opts.clone()).await?;
 
+    // if user is not logged in, logs user in
     if !is_logged_in {
         println!("not logged in!\n");
         login(&driver, opts.clone()).await?;
@@ -43,6 +41,7 @@ async fn main() -> WebDriverResult<()> {
         println!("already logged in!\n")
     }
     
+    // switches to correct tab
     switch_tab(&driver).await?;
 
     Ok(())
@@ -79,7 +78,7 @@ async fn is_logged_in(driver: &WebDriver, opts: Opts) -> WebDriverResult<bool> {
 
 // logs user in
 async fn login(driver: &WebDriver, opts: Opts) -> WebDriverResult<()> {
-    println!("logging in...");
+    println!("logging in...\n");
 
     let login_form: WebElement = driver.find_element(By::Tag("form")).await?;
 
@@ -97,7 +96,7 @@ async fn login(driver: &WebDriver, opts: Opts) -> WebDriverResult<()> {
 
 // switches to correct tab
 async fn switch_tab(driver: &WebDriver) -> WebDriverResult<()> {
-    println!("switching to correct tab...");
+    println!("switching to correct tab...\n");
 
     let tab: WebElement = driver.query(By::XPath("//span[contains(text(), \"Sent and pending\")]/..")).first().await?;
     tab.click().await?;
@@ -107,7 +106,7 @@ async fn switch_tab(driver: &WebDriver) -> WebDriverResult<()> {
 
 // clears input and writes
 async fn write(input_elem: WebElement<'_>, input_text: String) -> WebDriverResult<()> {
-    println!("writing {} to element {}", input_text, input_elem.id().await?.unwrap());
+    println!("writing {} to element {}\n", input_text, input_elem.id().await?.unwrap());
 
     input_elem.clear().await?;
     input_elem.send_keys(input_text).await?;
