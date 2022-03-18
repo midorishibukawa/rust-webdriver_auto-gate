@@ -27,17 +27,19 @@ async fn main() -> WebDriverResult<()> {
     let caps: ChromeCapabilities = load_caps(opts.clone());
     println!("{:?}\n", caps);
     
-    // start new webdriver
+    // starts new webdriver
     let driver: WebDriver = WebDriver::new("http://localhost:4444", &caps).await?;
     
-    // navigate to url
+    // navigates to url
     driver.get(opts.clone().base_url).await?;
 
-    // check if user is logged in
+    // checks if user is logged in
     let is_logged_in = !is_logged_in(&driver, opts.clone()).await?;
 
     if !is_logged_in {
         println!("not logged in!\n");
+        login(&driver, opts.clone()).await?;
+        switch_tab(&driver).await?;
     } else {
         println!("logged in!\n")
     }
@@ -66,10 +68,35 @@ fn load_caps(opts: Opts) -> ChromeCapabilities {
     caps
 }
 
-// check if user is logged in
+// checks if user is logged in
 // if not logged in, the website redirects to an auth0 login page
 async fn is_logged_in(driver: &WebDriver, opts: Opts) -> WebDriverResult<bool> {
     let url = driver.current_url().await?;
 
     Ok(!opts.base_url.contains(&url))
+}
+
+// logs user in
+async fn login(driver: &WebDriver, opts: Opts) -> WebDriverResult<()> {
+    println!("logging in...");
+
+    let login_form: WebElement = driver.find_element(By::Tag("form")).await?;
+
+    let username_input: WebElement = login_form.find_element(By::Id("username")).await?;
+    let password_input: WebElement = login_form.find_element(By::Id("password")).await?;
+    let form_submit_btn: WebElement = login_form.find_element(By::Tag("button[type=\"submit\"]")).await?;
+    
+    write(username_input, opts.username).await?;
+    write(password_input, opts.password).await?;
+
+    form_submit_btn.click().await?;
+
+    Ok(())
+}
+
+// clears input and writes
+async fn write(input_elem: WebElement<'_>, input_text: String) -> WebDriverResult<()> {
+    input_elem.clear().await?;
+    input_elem.send_keys(input_text).await?;
+    Ok(())
 }
