@@ -39,10 +39,11 @@ async fn main() -> WebDriverResult<()> {
     if !is_logged_in {
         println!("not logged in!\n");
         login(&driver, opts.clone()).await?;
-        switch_tab(&driver).await?;
     } else {
-        println!("logged in!\n")
+        println!("already logged in!\n")
     }
+    
+    switch_tab(&driver).await?;
 
     Ok(())
 }
@@ -94,9 +95,22 @@ async fn login(driver: &WebDriver, opts: Opts) -> WebDriverResult<()> {
     Ok(())
 }
 
+// switches to correct tab
+async fn switch_tab(driver: &WebDriver) -> WebDriverResult<()> {
+    println!("switching to correct tab...");
+
+    let tab: WebElement = driver.query(By::XPath("//span[contains(text(), \"Sent and pending\")]/..")).first().await?;
+    tab.click().await?;
+
+    Ok(())
+}
+
 // clears input and writes
 async fn write(input_elem: WebElement<'_>, input_text: String) -> WebDriverResult<()> {
+    println!("writing {} to element {}", input_text, input_elem.id().await?.unwrap());
+
     input_elem.clear().await?;
     input_elem.send_keys(input_text).await?;
+
     Ok(())
 }
