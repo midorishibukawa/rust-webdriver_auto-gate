@@ -7,4 +7,6 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread", "io-util", "sync"] }
-thirtyfour = "0.28.1"
+thirtyfour = "0.28"
+serde = "1.0"
+serde_json = "1.0"

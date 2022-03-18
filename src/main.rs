@@ -1,26 +1,29 @@
 use thirtyfour::prelude::*;
 use tokio;
+use serde::{Serialize, Deserialize};
+use serde_json;
+use std::fs;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Opts {
+    profile: String,
+    base_url: String,
+    username: String,
+    password: String,
+    timeout: u32,
+    csv_file_path: String,
+    error_message: String,
+    driver_opts: Vec<String>
+}
 
 #[tokio::main]
 async fn main() -> WebDriverResult<()> {
-    let caps = DesiredCapabilities::chrome();
-    let driver = WebDriver::new("http://localhost:4444", &caps).await?;
-
-    driver.get("https://wikipedia.org").await?;
+    println!("loading options file...");
+    let file_str: String = fs::read_to_string("data/options.json").expect("unable to read file!");
     
-    let elem_form = driver.find_element(By::Id("search-form")).await?;
-    let elem_text = elem_form.find_element(By::Id("searchInput")).await?;
+    let opts: Opts = serde_json::from_str(&file_str).expect("unable to parse file!");
 
-    elem_text.send_keys("selenium").await?;
-
-    let elem_button = elem_form.find_element(By::Css("button[type='submit']")).await?;
-    
-    elem_button.click().await?;
-
-    driver.find_element(By::ClassName("firstHeading")).await?;
-    assert_eq!(driver.title().await?, "Selenium - Wikipedia");
-
-    driver.quit().await?;
+    println!("{:?}", opts);
 
     Ok(())
 }
