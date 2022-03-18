@@ -1,4 +1,5 @@
 use thirtyfour::prelude::*;
+use thirtyfour::common::capabilities::chrome::ChromeCapabilities;
 use tokio;
 use serde::{Serialize, Deserialize};
 use serde_json;
@@ -13,17 +14,39 @@ struct Opts {
     timeout: u32,
     csv_file_path: String,
     error_message: String,
-    driver_opts: Vec<String>
+    driver_args: Vec<String>,
 }
 
 #[tokio::main]
 async fn main() -> WebDriverResult<()> {
-    println!("loading options file...");
-    let file_str: String = fs::read_to_string("data/options.json").expect("unable to read file!");
-    
-    let opts: Opts = serde_json::from_str(&file_str).expect("unable to parse file!");
+    // loads options file
+    let opts: Opts = load_opts();
+    println!("{:?}\n", opts);
 
-    println!("{:?}", opts);
+    // loads chrome options
+    let caps: ChromeCapabilities = load_caps(opts.clone());
+    println!("{:?}\n", caps);
 
     Ok(())
+}
+
+// loads options file
+fn load_opts() -> Opts {
+    println!("loading options file...\n");
+
+    let file_str: String = fs::read_to_string("data/options.json").expect("unable to read file!");
+    
+    serde_json::from_str(&file_str).expect("unable to parse file!")
+}
+
+// loads chrome options
+fn load_caps(opts: Opts) -> ChromeCapabilities {
+    println!("loading chrome options...\n");
+
+    let mut caps: ChromeCapabilities = DesiredCapabilities::chrome();
+    for opt in opts.driver_args {
+        caps.add_chrome_arg(&opt).expect("successfully added argument {:?}");
+    }
+
+    caps
 }
