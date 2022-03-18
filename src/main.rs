@@ -26,6 +26,12 @@ async fn main() -> WebDriverResult<()> {
     // loads chrome options
     let caps: ChromeCapabilities = load_caps(opts.clone());
     println!("{:?}\n", caps);
+    
+    // start new webdriver
+    let driver: WebDriver = WebDriver::new("http://localhost:4444", &caps).await?;
+    
+    // navigate to url
+    driver.get(opts.clone().base_url).await?;
 
     Ok(())
 }
