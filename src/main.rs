@@ -12,6 +12,7 @@ struct Opts {
     username: String,
     password: String,
     csv_file_path: String,
+    parcel_id: String,
     error_message: String,
     driver_args: Vec<String>,
 }
@@ -22,7 +23,7 @@ async fn main() -> WebDriverResult<()> {
     let opts: Opts = load_opts();
 
     // loads chrome options
-    let caps: ChromeCapabilities = load_caps(opts.clone());
+    let caps: ChromeCapabilities = load_caps(opts.clone().driver_args);
     
     // starts new webdriver
     let driver: WebDriver = WebDriver::new("http://localhost:4444", &caps).await?;
@@ -31,18 +32,23 @@ async fn main() -> WebDriverResult<()> {
     driver.get(opts.clone().base_url).await?;
 
     // checks if user is logged in
-    let is_logged_in = !is_logged_in(&driver, opts.clone()).await?;
+    let is_logged_in = !is_logged_in(&driver, opts.clone().base_url).await?;
 
     // if user is not logged in, logs user in
     if !is_logged_in {
         println!("not logged in!\n");
-        login(&driver, opts.clone()).await?;
+        login(&driver, opts.clone().username, opts.clone().password).await?;
     } else {
         println!("already logged in!\n")
     }
     
     // switches to correct tab
     switch_tab(&driver).await?;
+
+    // searches parcel by id
+    search_by_id(&driver, opts.parcel_id).await?;
+
+    // driver.quit().await?;
 
     Ok(())
 }
@@ -57,12 +63,12 @@ fn load_opts() -> Opts {
 }
 
 // loads chrome options
-fn load_caps(opts: Opts) -> ChromeCapabilities {
+fn load_caps(driver_args: Vec<String>) -> ChromeCapabilities {
     println!("loading chrome options...\n");
 
     let mut caps: ChromeCapabilities = DesiredCapabilities::chrome();
-    for opt in opts.driver_args {
-        caps.add_chrome_arg(&opt).expect("successfully added argument {:?}");
+    for arg in driver_args {
+        caps.add_chrome_arg(&arg).expect("successfully added argument {:?}");
     }
 
     caps
@@ -70,14 +76,14 @@ fn load_caps(opts: Opts) -> ChromeCapabilities {
 
 // checks if user is logged in
 // if not logged in, the website redirects to an auth0 login page
-async fn is_logged_in(driver: &WebDriver, opts: Opts) -> WebDriverResult<bool> {
+async fn is_logged_in(driver: &WebDriver, base_url: String) -> WebDriverResult<bool> {
     let url = driver.current_url().await?;
 
-    Ok(!opts.base_url.contains(&url))
+    Ok(!base_url.contains(&url))
 }
 
 // logs user in
-async fn login(driver: &WebDriver, opts: Opts) -> WebDriverResult<()> {
+async fn login(driver: &WebDriver, username: String, password: String) -> WebDriverResult<()> {
     println!("logging in...\n");
 
     let login_form: WebElement = driver.find_element(By::Tag("form")).await?;
@@ -86,8 +92,8 @@ async fn login(driver: &WebDriver, opts: Opts) -> WebDriverResult<()> {
     let password_input: WebElement = login_form.find_element(By::Id("password")).await?;
     let form_submit_btn: WebElement = login_form.find_element(By::Tag("button[type=\"submit\"]")).await?;
     
-    write(username_input, opts.username).await?;
-    write(password_input, opts.password).await?;
+    write(username_input, username).await?;
+    write(password_input, password).await?;
 
     form_submit_btn.click().await?;
 
@@ -98,15 +104,30 @@ async fn login(driver: &WebDriver, opts: Opts) -> WebDriverResult<()> {
 async fn switch_tab(driver: &WebDriver) -> WebDriverResult<()> {
     println!("switching to correct tab...\n");
 
-    let tab: WebElement = driver.query(By::XPath("//span[contains(text(), \"Sent and pending\")]/..")).first().await?;
+    let tab: WebElement = driver.query(By::XPath("//span[text()=\"Sent and pending\"]/..")).first().await?;
     tab.click().await?;
+
+    Ok(())
+}
+
+// searches parcel by id
+async fn search_by_id(driver: &WebDriver, parcel_id: String) -> WebDriverResult<()> {
+    println!("searching parcel by id...\n");
+
+    let search_input: WebElement = driver.query(By::Tag("input[placeholder=\"Search by ID\"]")).first().await?;
+
+    write(search_input, parcel_id.clone()).await?;
+
+    let parcel_td: WebElement = driver.query(By::XPath(&format!("//td[text()=\"{}\"]", &parcel_id))).first().await?;
+
+    parcel_td.click().await?;
 
     Ok(())
 }
 
 // clears input and writes
 async fn write(input_elem: WebElement<'_>, input_text: String) -> WebDriverResult<()> {
-    println!("writing {} to element {}\n", input_text, input_elem.id().await?.unwrap());
+    println!("writing {} to element {}", input_text, input_elem.element_id);
 
     input_elem.clear().await?;
     input_elem.send_keys(input_text).await?;
