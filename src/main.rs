@@ -33,6 +33,15 @@ async fn main() -> WebDriverResult<()> {
     // navigate to url
     driver.get(opts.clone().base_url).await?;
 
+    // check if user is logged in
+    let is_logged_in = !is_logged_in(&driver, opts.clone()).await?;
+
+    if !is_logged_in {
+        println!("not logged in!\n");
+    } else {
+        println!("logged in!\n")
+    }
+
     Ok(())
 }
 
@@ -55,4 +64,12 @@ fn load_caps(opts: Opts) -> ChromeCapabilities {
     }
 
     caps
+}
+
+// check if user is logged in
+// if not logged in, the website redirects to an auth0 login page
+async fn is_logged_in(driver: &WebDriver, opts: Opts) -> WebDriverResult<bool> {
+    let url = driver.current_url().await?;
+
+    Ok(!opts.base_url.contains(&url))
 }
