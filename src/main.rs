@@ -81,6 +81,10 @@ async fn main() -> WebDriverResult<()> {
             continue;
         }
 
+        let (parcel_info, code_td): (ParcelInfo, WebElement) =  load_parcel_info(&driver, parcel_list.first().unwrap()).await?;
+        let code: String = code_td.inner_html().await?;
+        println!("{:?}", parcel_info);
+        println!("{}", code);
     }
 
     // driver.quit().await?;
@@ -180,6 +184,36 @@ async fn search_by_id(driver: &WebDriver, post_id: String) -> WebDriverResult<()
     parcel_td.click().await?;
 
     Ok(())
+}
+
+async fn load_parcel_info<'a>(driver: &'a WebDriver, parcel_td: &WebElement<'_>) -> WebDriverResult<(ParcelInfo, WebElement<'a>)> {
+    parcel_td.click().await?;
+
+
+    let parcel_info_tr: Vec<WebElement> = driver.query(
+        By::XPath(
+            "//span[@class=\"p-column-title\"][text()=\"Description\"]/../../../../tbody/tr"
+        )
+    ).all().await?;
+    let receiver_td: WebElement = driver.query(
+        By::XPath(
+            "//div[@class=\"p-datatable-header\"][text()=\"Receiver\"]/..//td[text()=\"Sender\"]/following-sibling::*"
+        )
+    ).first().await?;
+
+    let description: String = parcel_info_tr.first().unwrap().inner_html().await?;
+    let receiver: String = receiver_td.inner_html().await?;
+    let code: String = "".to_string();
+    let code_td: WebElement = parcel_info_tr.last().unwrap().clone();
+
+    Ok((
+        ParcelInfo {
+            description,
+            receiver,
+            code,
+        },
+        code_td,
+    ))
 }
 
 // clears input and writes
