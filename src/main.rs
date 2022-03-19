@@ -62,6 +62,27 @@ async fn main() -> WebDriverResult<()> {
     // searches parcel by id
     search_by_id(&driver, opts.post_id).await?;
 
+    loop {
+        let parcel_list: Vec::<WebElement> = driver.query(
+            By::XPath(
+                &format!("//td[text()=\"{}\"]", opts.error_message)
+            )
+        ).all().await?;
+
+        if parcel_list.len() == 0 {
+            let next_btn = driver.find_element(By::ClassName("p-paginator-next")).await?;
+            let next_btn_class = next_btn.class_name().await?.unwrap();
+
+            if next_btn_class.contains("disabled") {
+                break;
+            }
+
+            next_btn.click().await?;
+            continue;
+        }
+
+    }
+
     // driver.quit().await?;
 
     Ok(())
@@ -78,6 +99,8 @@ fn load_opts() -> Opts {
 
 // loads csv file into a hashmap
 fn load_csv(csv_path: String, post_id: String) -> Result<HashMap<String, Vec<ParcelInfo>>, Error> {
+    println!("loading csv file...\n");
+
     let mut rdr = csv::ReaderBuilder::new()
         .from_path(
             &format!("{}/{}.csv", &csv_path, &post_id)
