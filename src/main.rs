@@ -70,17 +70,19 @@ async fn main() -> WebDriverResult<()> {
         ).all().await?;
 
         if parcel_list.len() == 0 {
+            // if no parcel is fixable, find next button
             let next_btn = driver.find_element(By::ClassName("p-paginator-next")).await?;
             let next_btn_class = next_btn.class_name().await?.unwrap();
 
-            if next_btn_class.contains("disabled") {
-                break;
-            }
+            // if next button is disabled, break loop
+            if next_btn_class.contains("disabled") { break; }
 
+            // if next button is not disabled, click it and restart loop
             next_btn.click().await?;
             continue;
         }
 
+        // loads parcel info and code input element
         let (parcel_info, code_td): (ParcelInfo, WebElement) =  load_parcel_info(&driver, parcel_list.first().unwrap()).await?;
         let code: String = code_td.inner_html().await?;
         println!("{:?}", parcel_info);
@@ -186,9 +188,9 @@ async fn search_by_id(driver: &WebDriver, post_id: String) -> WebDriverResult<()
     Ok(())
 }
 
+// loads parcel info and code input element
 async fn load_parcel_info<'a>(driver: &'a WebDriver, parcel_td: &WebElement<'_>) -> WebDriverResult<(ParcelInfo, WebElement<'a>)> {
     parcel_td.click().await?;
-
 
     let parcel_info_tr: Vec<WebElement> = driver.query(
         By::XPath(
