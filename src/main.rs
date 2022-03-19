@@ -82,11 +82,12 @@ async fn main() -> WebDriverResult<()> {
             continue;
         }
 
-        // loads parcel info and code input element
+        // loads parcel info and code cell element
         let (parcel_info, code_td): (ParcelInfo, WebElement) =  load_parcel_info(&driver, parcel_list.first().unwrap()).await?;
-        let code: String = code_td.inner_html().await?;
-        println!("{:?}", parcel_info);
-        println!("{}", code);
+
+        fix_parcel_code(&driver, parcel_info, &post_info, code_td).await?;
+
+        update_and_send(&driver).await?;
     }
 
     // driver.quit().await?;
@@ -188,7 +189,7 @@ async fn search_by_id(driver: &WebDriver, post_id: String) -> WebDriverResult<()
     Ok(())
 }
 
-// loads parcel info and code input element
+// loads parcel info and code cell element
 async fn load_parcel_info<'a>(driver: &'a WebDriver, parcel_td: &WebElement<'_>) -> WebDriverResult<(ParcelInfo, WebElement<'a>)> {
     parcel_td.click().await?;
 
@@ -205,8 +206,8 @@ async fn load_parcel_info<'a>(driver: &'a WebDriver, parcel_td: &WebElement<'_>)
 
     let description: String = parcel_info_tr.first().unwrap().inner_html().await?;
     let receiver: String = receiver_td.inner_html().await?;
-    let code: String = "".to_string();
     let code_td: WebElement = parcel_info_tr.last().unwrap().clone();
+    let code: String = code_td.text().await?;
 
     Ok((
         ParcelInfo {
@@ -217,6 +218,50 @@ async fn load_parcel_info<'a>(driver: &'a WebDriver, parcel_td: &WebElement<'_>)
         code_td,
     ))
 }
+
+// fixes parcel code
+async fn fix_parcel_code(
+    driver: &WebDriver,
+    parcel_info: ParcelInfo,
+    post_info: &HashMap<String, Vec<ParcelInfo>>,
+    code_td: WebElement<'_>
+) -> WebDriverResult<()> {
+    println!("fixing parcel code...");
+
+    let parcel_list_by_receiver: &Vec<ParcelInfo> = post_info.get(&parcel_info.receiver).unwrap();
+
+    for correct_parcel in parcel_list_by_receiver {
+        if correct_parcel.receiver == parcel_info.receiver {
+            code_td.click().await?;
+            let code_input = driver.query(
+                By::Tag(
+                    &format!("input[value=\"{}\"]", parcel_info.code)
+                )
+            ).first().await?;
+            write(code_input, correct_parcel.clone().code).await?;
+        }
+    }
+
+    Ok(())
+}
+
+// updates and send fixed parcel
+async fn update_and_send(driver: &WebDriver) -> WebDriverResult<()> {
+    println!("updating and sending parcel...");
+
+    let update_btn: WebElement = driver.query(By::XPath("//span[text()=\"Update and send package to customs\"]")).first().await?;
+
+    update_btn.click().await?;
+    
+    let confirm_btn: WebElement = driver.query(By::ClassName("p-confirm-dialog-accept")).first().await?;
+
+    confirm_btn.click().await?;
+
+    driver.query(By::ClassName("p-component-overlay")).not_exists().await?;
+
+    Ok(())
+}
+
 
 // clears input and writes
 async fn write(input_elem: WebElement<'_>, input_text: String) -> WebDriverResult<()> {
