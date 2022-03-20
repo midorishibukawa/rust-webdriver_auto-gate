@@ -27,7 +27,6 @@ name = "auto-gate"
 version = "0.1.0"
 dependencies = [
  "csv",
- "futures",
  "serde",
  "serde_json",
  "thirtyfour",
