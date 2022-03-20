@@ -1,5 +1,21 @@
-# auto-gate
+<div align="center">
+  <h2>auto-gate</h2>
+  <p>A web automation project made with Rust and the <a href="https://github.com/stevepryde/thirtyfour">Thirtyfour</a> Selenium/WebDriver library.<p>
+</div>
 
-A web automation project made with Rust and the <a href="https://github.com/stevepryde/thirtyfour">Thirtyfour</a> WebDriver crate.
+<h2>About</h2>
+<p>This program automates the task of looking for items with a wrong code in a list, and fixing them by looking up the correct codes in a csv file.</p>
 
-This project automates the task of looking for items with a wrong code in a list, and fixing them by looking up the correct codes in a csv file.
+<h2>Requirements</h2>
+<h3>Rust Toolchain</h3>
+<p>To run the program, you'll need the standard Rust toolchain, including <code>rustup</code>, <code>rustc</code>, and <code>cargo</code>.</p>
+<p>You can follow <a href="https://www.rust-lang.org/tools/install">these instructions</a> to install it.</p>
+<h3>Selenium or a standalone Chrome WebDriver</h3>
+<p>You'll also need Selenium, or a Chrome WebDriver (<code>chromedriver</code>) that matches your Chrome version.</p>
+<p>If you're using <code>chromedriver</code> directly, you need to run it on port 4444:</p>
+<code>chromedriver --port=4444</code>
+<p>If you're using Selenium, please follow <a href="https://github.com/stevepryde/thirtyfour#running-against-selenium">Thirthyfour's official instructions to run against it</a>.</p>
+
+<h2>Usage</h2>
+<p>You can start the automation by running:</p>
+<code>cargo run</code>
