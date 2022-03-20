@@ -10,7 +10,8 @@
   <li><code>thirfyfour</code>: to interact with the WebDriver server</li>
   <li><code>tokio</code>: to provide asynchronous functionalities</li>
   <li><code>csv</code>: to provide csv parsing with serde support</li>
-  <li><code>serde</code> and <code>serde_json</code>: to provide deserialization of csv data into Rust structs</li>
+  <li><code>serde</code>: to provide deserialization of CSV data into Rust structs</li>
+  <li><code>serde_json</code>: to translate the JSON options file into Rust structs</li>
  </ul>
 
 <h2>Requirements</h2>
