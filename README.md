@@ -5,6 +5,13 @@
 
 <h2>About</h2>
 <p>This program automates the task of looking for items with a wrong code in a list, and fixing them by looking up the correct codes in a csv file.</p>
+<p>It depends on the following crates:</p>
+<ul>
+  <li><code>thirfyfour</code>: to interact with the WebDriver server</li>
+  <li><code>tokio</code>: to provide asynchronous functionalities</li>
+  <li><code>csv</code>: to provide csv parsing with serde support</li>
+  <li><code>serde and serde_json</code>: to provide deserialization of csv data into Rust structs</li>
+ </ul>
 
 <h2>Requirements</h2>
 <h3>Rust Toolchain</h3>
