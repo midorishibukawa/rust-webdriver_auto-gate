@@ -13,9 +13,9 @@
 <h3>Selenium or a standalone Chrome WebDriver</h3>
 <p>You'll also need Selenium, or a Chrome WebDriver (<code>chromedriver</code>) that matches your Chrome version.</p>
 <p>If you're using <code>chromedriver</code> directly, you need to run it on port 4444:</p>
-<code>chromedriver --port=4444</code>
+<p><code>chromedriver --port=4444</code></p>
 <p>If you're using Selenium, please follow <a href="https://github.com/stevepryde/thirtyfour#running-against-selenium">Thirthyfour's official instructions to run against it</a>.</p>
 
 <h2>Usage</h2>
 <p>You can start the automation by running:</p>
-<code>cargo run</code>
+<p><code>cargo run</code></p>
